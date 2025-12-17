@@ -13,9 +13,9 @@ async function main() {
             avatarUrl: 'https://github.com/shadcn.png',
         },
         {
-            username: 'amor do pudizimho',
+            username: 'amococteautwins',
             password: '1234',
-            name: 'Cocteau Lover',
+            name: 'amor da pudizimhor',
             avatarUrl: 'https://github.com/shadcn.png',
         },
     ]
