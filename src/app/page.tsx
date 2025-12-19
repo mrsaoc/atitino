@@ -29,13 +29,31 @@ interface MovieWithInteractions {
 
 export default async function Home() {
     const session = await getServerSession(authOptions);
-    if (!session) redirect("/login");
 
+    if (!session || !session.user) {
+        redirect("/login");
+    }
+
+    // BLINDAGEM: Verifica se o username realmente existe
     const sessionUsername = (session.user as any).username;
-    const currentUser = await prisma.user.findUnique({ where: { username: sessionUsername } });
 
-    const displayName = currentUser?.name || session.user?.name;
-    const displayAvatar = currentUser?.avatarUrl || session.user?.avatarUrl;
+    if (!sessionUsername) {
+        // Se o username estiver vazio (erro de cookie), força logout para limpar
+        redirect("/api/auth/signout");
+    }
+
+    // Agora é seguro buscar no banco
+    const currentUser = await prisma.user.findUnique({
+        where: { username: sessionUsername }
+    });
+
+    // Se não achar o usuário no banco (deletado?), força logout
+    if (!currentUser) {
+        redirect("/api/auth/signout");
+    }
+
+    const displayName = currentUser.name || session.user.name;
+    const displayAvatar = currentUser.avatarUrl || session.user.avatarUrl;
 
     const movies = await prisma.movie.findMany({
         orderBy: { updatedAt: "desc" },
@@ -60,7 +78,6 @@ export default async function Home() {
                                 // eslint-disable-next-line @next/next/no-img-element
                                 <img src={displayAvatar} alt="Avatar" className="w-full h-full object-cover" />
                             ) : (
-                                // Gradiente suave com texto escuro
                                 <div className="w-full h-full bg-gradient-to-tr from-violet-300 to-fuchsia-300 flex items-center justify-center text-violet-950 text-xs font-bold">
                                     {displayName?.[0]?.toUpperCase()}
                                 </div>
